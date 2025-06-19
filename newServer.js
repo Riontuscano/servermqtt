@@ -93,6 +93,39 @@ app.get('/api/data', async (req, res) => {
   }
 });
 
+app.get('/api/data', async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const skip = (page - 1) * limit;
+
+  try {
+    const [docs, totalCount] = await Promise.all([
+      EspData.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
+      EspData.countDocuments()
+    ]);
+    res.json({ docs, totalCount });
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching data' });
+  }
+});
+app.delete('/api/data/deleteByDate', async (req, res) => {
+  const { from, to } = req.body;
+  try {
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+    const result = await EspData.deleteMany({
+      createdAt: {
+        $gte: fromDate,
+        $lte: toDate
+      }
+    });
+    res.json({ message: `${result.deletedCount} documents deleted.` });
+  } catch (err) {
+    res.status(500).json({ error: 'Delete failed', details: err });
+  }
+});
+
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
