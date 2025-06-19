@@ -71,7 +71,8 @@ mqttClient.on('message', async (topic, message) => {
       Signal: data.Signal,
       SOS: data.SOS,
       Reset: data.Reset,
-      BLE: data.BLE
+      BLE: data.BLE,
+      BreedFactor:data.BreedFactor
     });
 
     await doc.save();
@@ -84,14 +85,14 @@ app.get('/', (req, res) => {
   res.send('ESP32 Step & Sensor Backend is Running');
 });
 
-app.get('/api/data', async (req, res) => {
-  try {
-    const latest = await EspData.find().sort({ createdAt: -1 }).limit(50);
-    res.json(latest);
-  } catch (err) {
-    res.status(500).json({ error: 'Error fetching data' });
-  }
-});
+// app.get('/api/data', async (req, res) => {
+//   try {
+//     const latest = await EspData.find().sort({ createdAt: -1 }).limit(50);
+//     res.json(latest);
+//   } catch (err) {
+//     res.status(500).json({ error: 'Error fetching data' });
+//   }
+// });
 
 app.get('/api/data', async (req, res) => {
   const page = parseInt(req.query.page) || 1;
