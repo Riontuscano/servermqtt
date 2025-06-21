@@ -98,10 +98,11 @@ app.get('/api/data', async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 20;
   const skip = (page - 1) * limit;
+  const sortOrder = req.query.sort === 'asc' ? 1 : -1; // Default to descending
 
   try {
     const [docs, totalCount] = await Promise.all([
-      EspData.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
+      EspData.find().sort({ createdAt: sortOrder }).skip(skip).limit(limit),
       EspData.countDocuments()
     ]);
     res.json({ docs, totalCount });

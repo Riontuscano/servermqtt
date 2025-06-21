@@ -2,6 +2,12 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { motion } from 'framer-motion';
+import DashboardHeader from './components/DashboardHeader';
+import DateFilter from './components/DateFilter';
+import DataTable from './components/DataTable';
+import Pagination from './components/Pagination';
+import Loader from './components/Loader';
+import * as XLSX from 'xlsx';
 
 const BACKEND_URL = 'https://servermqtt.onrender.com';
 
@@ -12,18 +18,20 @@ export default function App() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [exporting, setExporting] = useState(false);
 
   const perPage = 20;
   const totalPages = Math.ceil(totalCount / perPage);
 
   useEffect(() => {
     fetchData();
-  }, [currentPage]);
+  }, [currentPage, sortOrder]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${BACKEND_URL}/api/data?page=${currentPage}&limit=${perPage}`);
+      const res = await axios.get(`${BACKEND_URL}/api/data?page=${currentPage}&limit=${perPage}&sort=${sortOrder}`);
       setData(res.data.docs);
       setTotalCount(res.data.totalCount);
     } catch (err) {
@@ -46,97 +54,60 @@ export default function App() {
     }
   };
 
+  const handleSortChange = (e) => {
+    setSortOrder(e.target.value);
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const res = await axios.get(`${BACKEND_URL}/api/data?page=1&limit=10000&sort=${sortOrder}`);
+      const allData = res.data.docs;
+      const worksheet = XLSX.utils.json_to_sheet(allData.map((doc, i) => ({
+        '#': i + 1,
+        SIM: doc.SIM,
+        MACID: doc.MACID,
+        Latitude: doc.Latitude,
+        Longitude: doc.Longitude,
+        Battery: doc.Battery,
+        StepCount: doc.StepCount,
+        WiFi: doc.WiFi,
+        Signal: doc.Signal,
+        BreedFactor: doc.BreedFactor,
+        Time: new Date(doc.createdAt).toLocaleString()
+      })));
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'ESP32 Data');
+      XLSX.writeFile(workbook, 'esp32_data.xlsx');
+    } catch (err) {
+      alert('Failed to export data');
+      console.error(err);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen px-6 py-10 text-foreground bg-background font-sans">
-      <motion.h1 
-        className="text-3xl font-bold text-center mb-8 text-primary"
-        initial={{ opacity: 0, y: -30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-      >
-        📊 ESP32 Data Dashboard
-      </motion.h1>
-
-      <motion.div 
-        className="mb-6 text-center"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-      >
-        <p className="text-lg">Total Documents: <span className="text-primary font-semibold">{totalCount}</span></p>
-      </motion.div>
-
-      <div className="flex justify-center items-center gap-4 mb-6 flex-wrap">
-        <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)}
-          className="bg-card border border-gray-700 text-white px-4 py-2 rounded" />
-        <input type="date" value={toDate} onChange={e => setToDate(e.target.value)}
-          className="bg-card border border-gray-700 text-white px-4 py-2 rounded" />
-        <button
-          onClick={deleteByDate}
-          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition-all duration-200"
-        >🗑 Delete by Date</button>
-      </div>
-
-      {loading ? (
-        <p className="text-center text-gray-400">Loading...</p>
+      <DashboardHeader totalCount={totalCount} onExport={handleExport} />
+      {(loading || exporting) ? (
+        <Loader />
       ) : (
-        <motion.div
-          className="overflow-x-auto"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          <table className="w-full text-sm text-left border-collapse bg-card text-foreground">
-          <thead className="bg-gray-900">
-  <tr>
-    <th className="px-4 py-2 border-b">#</th>
-    <th className="px-4 py-2 border-b">SIM</th>
-    <th className="px-4 py-2 border-b">MACID</th>
-    <th className="px-4 py-2 border-b">Lat</th>
-    <th className="px-4 py-2 border-b">Long</th>
-    <th className="px-4 py-2 border-b">Battery</th>
-    <th className="px-4 py-2 border-b">Steps</th>
-    <th className="px-4 py-2 border-b">WiFi</th>
-    <th className="px-4 py-2 border-b">Signal</th>
-    <th className="px-4 py-2 border-b">Breed</th> {/* 🐾 Added */}
-    <th className="px-4 py-2 border-b">Time</th>
-  </tr>
-</thead>
-
-            <tbody>
-              {data.map((doc, i) => (
-                <tr key={doc._id} className="hover:bg-gray-800 transition-all duration-200">
-  <td className="px-4 py-2 border-b">{(currentPage - 1) * perPage + i + 1}</td>
-  <td className="px-4 py-2 border-b">{doc.SIM}</td>
-  <td className="px-4 py-2 border-b">{doc.MACID}</td>
-  <td className="px-4 py-2 border-b">{doc.Latitude}</td>
-  <td className="px-4 py-2 border-b">{doc.Longitude}</td>
-  <td className="px-4 py-2 border-b">{doc.Battery}</td>
-  <td className="px-4 py-2 border-b">{doc.StepCount}</td>
-  <td className="px-4 py-2 border-b">{doc.WiFi}</td>
-  <td className="px-4 py-2 border-b">{doc.Signal}</td>
-  <td className="px-4 py-2 border-b">{doc.BreedFactor ?? '—'}</td> {/* 🐶 BreedFactor */}
-  <td className="px-4 py-2 border-b">{format(new Date(doc.createdAt), 'yyyy-MM-dd HH:mm')}</td>
-</tr>
-
-              ))}
-            </tbody>
-          </table>
-        </motion.div>
+        <>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+            <DateFilter fromDate={fromDate} toDate={toDate} setFromDate={setFromDate} setToDate={setToDate} deleteByDate={deleteByDate} />
+            <div className="flex items-center gap-2">
+              <label htmlFor="sortOrder" className="text-sm font-medium">Sort by Date:</label>
+              <select id="sortOrder" value={sortOrder} onChange={handleSortChange} className="bg-card border border-gray-700 text-white px-3 py-2 rounded">
+                <option value="desc">Newest First</option>
+                <option value="asc">Oldest First</option>
+              </select>
+            </div>
+          </div>
+          <DataTable data={data} currentPage={currentPage} perPage={perPage} />
+          <Pagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />
+        </>
       )}
-
-      <div className="mt-6 flex justify-center items-center gap-6">
-        <button
-          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-          disabled={currentPage === 1}
-          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded disabled:opacity-30"
-        >⬅ Prev</button>
-        <span className="text-gray-300">Page {currentPage} of {totalPages}</span>
-        <button
-          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-          disabled={currentPage === totalPages}
-          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded disabled:opacity-30"
-        >Next ➡</button>
-      </div>
     </div>
   );
 }
