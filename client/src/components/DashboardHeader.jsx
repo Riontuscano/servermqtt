@@ -16,7 +16,7 @@ export default function DashboardHeader({ totalCount, onExport }) {
         onClick={onExport}
         className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded shadow font-semibold transition-all duration-200 flex items-center gap-2"
       >
-        <span role="img" aria-label="excel">📥</span> Export to Excel
+        <span role="img" aria-label="excel"></span> Export to Excel
       </button>
     </motion.header>
   );
