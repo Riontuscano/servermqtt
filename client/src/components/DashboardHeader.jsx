@@ -9,7 +9,7 @@ export default function DashboardHeader({ totalCount, onExport }) {
       transition={{ duration: 0.8 }}
     >
       <div>
-        <h1 className="text-4xl font-extrabold text-primary mb-2 tracking-tight">📊 ESP32 Data Dashboard</h1>
+        <h1 className="text-4xl font-extrabold text-primary mb-2 tracking-tight">Pet tracker Data Dashboard</h1>
         <p className="text-lg text-gray-300">Total Documents: <span className="text-primary font-semibold">{totalCount}</span></p>
       </div>
       <button
