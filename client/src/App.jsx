@@ -7,6 +7,7 @@ import DateFilter from './components/DateFilter';
 import DataTable from './components/DataTable';
 import Pagination from './components/Pagination';
 import Loader from './components/Loader';
+import Map from './components/Map';
 import * as XLSX from 'xlsx';
 
 const BACKEND_URL = 'https://servermqtt.onrender.com';
@@ -104,6 +105,13 @@ export default function App() {
               </select>
             </div>
           </div>
+          
+          {/* Map Section */}
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold mb-4 text-primary">📍 Location Map</h2>
+            <Map data={data} />
+          </div>
+          
           <DataTable data={data} currentPage={currentPage} perPage={perPage} />
           <Pagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />
         </>
