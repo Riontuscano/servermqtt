@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -17,6 +17,11 @@ export default function Map({ data }) {
     ? [data[0].Latitude || 0, data[0].Longitude || 0]
     : [0, 0];
 
+  // Prepare polyline positions from data
+  const polylinePositions = data
+    .filter(point => point.Latitude && point.Longitude)
+    .map(point => [point.Latitude, point.Longitude]);
+
   return (
     <div className="w-full h-96 rounded-lg overflow-hidden shadow-lg bg-card">
       <MapContainer 
@@ -29,6 +34,10 @@ export default function Map({ data }) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        {/* Polyline for pet's walk route */}
+        {polylinePositions.length > 1 && (
+          <Polyline positions={polylinePositions} color="blue" />
+        )}
         {data.map((point, index) => (
           <Marker 
             key={`${point._id}-${index}`} 
