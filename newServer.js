@@ -8,7 +8,7 @@ import cors from 'cors';
 const app = express();
 const PORT = process.env.PORT || 5500;
 
-app.use(cors({ origin:['*']}));
+app.use(cors({ origin:['*','http://localhost:3000','https://servermqtt.vercel.app'] }));
 app.use(express.json());
 
 mongoose.connect(process.env.MONGODB_URI, {
