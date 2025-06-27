@@ -1,4 +1,4 @@
-import User, { findOne } from '../models/User';
+import User, { findOne } from '../models/User.js';
 import { hash, compare } from 'bcryptjs';
 import { sign } from 'jsonwebtoken';
 
