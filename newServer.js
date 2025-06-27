@@ -4,7 +4,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import espDataRoutes from './routes/espDataRoutes.js';
-import authRoutes from './routes/auth.js';
+import authRoutes from './routes/userRoutes.js';
 import './mqtt/mqttClient.js';
 
 const app = express();

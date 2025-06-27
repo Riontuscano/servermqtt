@@ -1,35 +1,35 @@
-const User = require('../models/User');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+import User, { findOne } from '../models/User';
+import { hash, compare } from 'bcryptjs';
+import { sign } from 'jsonwebtoken';
 
-exports.signup = async (req, res) => {
+export async function signup(req, res) {
   const { fullname, username, email, phone, password } = req.body;
   if (!fullname || !username || !email || !phone || !password) {
     return res.status(400).json({ message: 'All fields are required' });
   }
   try {
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    const existingUser = await findOne({ $or: [{ email }, { username }] });
     if (existingUser) return res.status(400).json({ message: 'User already exists' });
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hash(password, 10);
     const user = new User({ fullname, username, email, phone, password: hashedPassword });
     await user.save();
-    const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
     res.status(201).json({ user: { fullname: user.fullname, username: user.username, email: user.email, phone: user.phone }, token });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
-};
+}
 
-exports.login = async (req, res) => {
+export async function login(req, res) {
   const { email, password } = req.body;
   try {
-    const user = await User.findOne({ email });
+    const user = await findOne({ email });
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
-    const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
     res.json({ user: { fullname: user.fullname, username: user.username, email: user.email, phone: user.phone }, token });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
-}; 
+} 
