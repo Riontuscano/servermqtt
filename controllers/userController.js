@@ -16,8 +16,8 @@ export async function signup(req, res) {
     const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
     res.status(201).json({ user: { fullname: user.fullname, username: user.username, email: user.email, phone: user.phone }, token });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
+    res.status(500).json(err.message);
+  } 
 }
 
 export async function login(req, res) {
@@ -30,6 +30,6 @@ export async function login(req, res) {
     const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
     res.json({ user: { fullname: user.fullname, username: user.username, email: user.email, phone: user.phone }, token });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json(err.message);
   }
 } 
