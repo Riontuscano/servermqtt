@@ -4,6 +4,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import espDataRoutes from './routes/espDataRoutes.js';
+import authRoutes from './routes/auth.js';
 import './mqtt/mqttClient.js';
 
 const app = express();
@@ -25,7 +26,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api', espDataRoutes);
-app.use('/api/auth', require('./routes/auth'));
+app.use('/api/auth', authRoutes);
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 }); 
