@@ -8,7 +8,7 @@ import authRoutes from './routes/userRoutes.js';
 import './mqtt/mqttClient.js';
 
 const app = express();
-const PORT = process.env.PORT || 5500;
+const PORT = process.env.PORT;
 
 app.use(cors({ origin:['*','http://localhost:3000','https://servermqtt.vercel.app'] }));
 app.use(express.json());
