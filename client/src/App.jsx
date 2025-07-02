@@ -21,6 +21,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [sortOrder, setSortOrder] = useState('desc');
   const [exporting, setExporting] = useState(false);
+  const [gprsOnly, setGprsOnly] = useState(false);
 
   const perPage = 20;
   const totalPages = Math.ceil(totalCount / perPage);
@@ -88,6 +89,9 @@ export default function App() {
     }
   };
 
+  // Filter data for GPRS only
+  const filteredData = gprsOnly ? data.filter(d => Number(d.Signal) > 0) : data;
+
   return (
     <div className="min-h-screen px-6 py-10 text-foreground bg-background font-sans">
       <DashboardHeader totalCount={totalCount} onExport={handleExport} />
@@ -97,22 +101,35 @@ export default function App() {
         <>
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
             <DateFilter fromDate={fromDate} toDate={toDate} setFromDate={setFromDate} setToDate={setToDate} deleteByDate={deleteByDate} />
-            <div className="flex items-center gap-2">
-              <label htmlFor="sortOrder" className="text-sm font-medium">Sort by Date:</label>
-              <select id="sortOrder" value={sortOrder} onChange={handleSortChange} className="bg-card border border-gray-700 text-white px-3 py-2 rounded">
-                <option value="desc">Newest First</option>
-                <option value="asc">Oldest First</option>
-              </select>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <label htmlFor="sortOrder" className="text-sm font-medium">Sort by Date:</label>
+                <select id="sortOrder" value={sortOrder} onChange={handleSortChange} className="bg-card border border-gray-700 text-white px-3 py-2 rounded">
+                  <option value="desc">Newest First</option>
+                  <option value="asc">Oldest First</option>
+                </select>
+              </div>
+              {/* GPRS Only Toggle */}
+              <div className="flex items-center gap-2">
+                <label htmlFor="gprsOnly" className="text-sm font-medium">GPRS only</label>
+                <input
+                  id="gprsOnly"
+                  type="checkbox"
+                  checked={gprsOnly}
+                  onChange={() => setGprsOnly(v => !v)}
+                  className="w-5 h-5 accent-blue-500"
+                />
+              </div>
             </div>
           </div>
           
           {/* Map Section */}
           <div className="mb-8">
             <h2 className="text-2xl font-bold mb-4 text-primary">📍 Location Map</h2>
-            <Map data={data} />
+            <Map data={filteredData} />
           </div>
           
-          <DataTable data={data} currentPage={currentPage} perPage={perPage} />
+          <DataTable data={filteredData} currentPage={currentPage} perPage={perPage} />
           <Pagination currentPage={currentPage} totalPages={totalPages} setCurrentPage={setCurrentPage} />
         </>
       )}
