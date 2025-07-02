@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 import { saveMqttData } from '../controllers/espDataController.js';
 
-const mqttUrl = 'mqtts://f948043422ce46d7ae62f9c7562028ae.s1.eu.hivemq.cloud:1883';
+const mqttUrl = 'mqtts://f948043422ce46d7ae62f9c7562028ae.s1.eu.hivemq.cloud:8884/mqtt';
 const mqttTopic = 'esp32/data';
 
 const mqttClient = mqttConnect(mqttUrl, {
