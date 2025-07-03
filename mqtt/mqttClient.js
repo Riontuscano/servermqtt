@@ -21,7 +21,7 @@ mqttClient.on('connect', () => {
 mqttClient.on('message', async (topic, message) => {
   try {
     const data = JSON.parse(message.toString());
-    console.log('📥 Received:', data);
+    // console.log('📥 Received:', data);
     await saveMqttData(data);
   } catch (err) {
     console.error('Error handling MQTT message:', err);
