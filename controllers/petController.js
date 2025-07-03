@@ -3,6 +3,7 @@ import Pet from '../models/Pet.js';
 export const createPet = async (req, res) => {
   try {
     const { imageUrl, name, dob, user, macId } = req.body;
+    console.log(req.body);
     const pet = new Pet({ imageUrl, name, dob, user, macId });
     await pet.save();
     res.status(201).json(pet);
