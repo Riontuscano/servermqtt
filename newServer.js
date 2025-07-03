@@ -12,7 +12,7 @@ const app = express();
 const PORT = process.env.PORT;
 
 app.use(cors({ origin:['*','http://localhost:5173','https://servermqtt.vercel.app'] }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 mongoose.connect(process.env.MONGODB_URI, {
   serverSelectionTimeoutMS: 5000,

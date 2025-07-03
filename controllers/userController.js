@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 
 export async function signup(req, res) {
   const { fullName, username, email, phone, password } = req.body;
-  console.log(fullName, username, email, phone, password);
+  // console.log(fullName, username, email, phone, password);
   if (!fullName || !username || !email || !phone || !password) {
     return res.status(400).json({ message: 'All fields are required' });
   }
@@ -25,7 +25,7 @@ export async function login(req, res) {
   const { username, password } = req.body;
   try {
     const user = await User.findOne({ username: username });
-    console.log(user);
+    // console.log(user);
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
     const isMatch = await compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
