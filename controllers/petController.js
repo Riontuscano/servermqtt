@@ -48,4 +48,14 @@ export const deletePet = async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+};
+
+export const getPetsByUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const pets = await Pet.find({ user: userId }).populate('user', 'fullName username email');
+    res.json(pets);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 }; 
