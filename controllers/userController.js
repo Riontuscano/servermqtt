@@ -32,7 +32,7 @@ export async function login(req, res) {
     console.log(isMatch);
 
     const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.json({ user: { fullName: user.fullName, username: user.username, email: user.email, phone: user.phone, img: user.img }, token });
+    res.json({ user: { id: user._id, fullName: user.fullName, username: user.username, email: user.email, phone: user.phone, img: user.img }, token });
   } catch (err) {
     res.status(500).json(err.message);
   }
