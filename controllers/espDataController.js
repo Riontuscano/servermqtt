@@ -41,7 +41,7 @@ export const saveMqttData = async (data) => {
       Latitude: data.Latitude,
       Longitude: data.Longitude,
       Battery: data.Battery,
-      StepCount: data["Step count"],
+      StepCount: data.StepCount,
       WiFi: data.WiFi,
       Signal: data.Signal,
       SOS: data.SOS,
