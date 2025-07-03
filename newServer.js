@@ -6,6 +6,7 @@ import cors from 'cors';
 import espDataRoutes from './routes/espDataRoutes.js';
 import authRoutes from './routes/userRoutes.js';
 import './mqtt/mqttClient.js';
+import petRoutes from './routes/petRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT;
@@ -27,6 +28,7 @@ app.get('/', (req, res) => {
 
 app.use('/api', espDataRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/pets', petRoutes);
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 }); 
