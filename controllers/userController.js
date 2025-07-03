@@ -12,10 +12,10 @@ export async function signup(req, res) {
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) return res.status(400).json({ message: 'User already exists' });
     const hashedPassword = await hash(password, 10);
-    const user = new User({ fullName, username, email, phone, password: hashedPassword });
+    const user = new User({ fullName, username, email, phone, password: hashedPassword, img: null });
     await user.save();
     const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.status(201).json({ user: { fullName: user.fullName, username: user.username, email: user.email, phone: user.phone }, token });
+    res.status(201).json({ user: { id: user._id, fullName: user.fullName, username: user.username, email: user.email, phone: user.phone, img: user.img }, token });
   } catch (err) {
     res.status(500).json(err.message);
   } 
@@ -32,7 +32,7 @@ export async function login(req, res) {
     console.log(isMatch);
 
     const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
-    res.json({ user: { fullName: user.fullName, username: user.username, email: user.email, phone: user.phone }, token });
+    res.json({ user: { fullName: user.fullName, username: user.username, email: user.email, phone: user.phone, img: user.img }, token });
   } catch (err) {
     res.status(500).json(err.message);
   }
