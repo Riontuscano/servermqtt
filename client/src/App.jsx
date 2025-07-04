@@ -92,6 +92,22 @@ export default function App() {
   // Filter data for GPRS only
   const filteredData = gprsOnly ? data.filter(d => Number(d.Signal) > 0) : data;
 
+  // Get unique MACIDs
+  const uniqueMacIds = Array.from(new Set(data.map(doc => doc.MACID))).filter(Boolean);
+
+  // Delete by MACID handler
+  const handleDeleteByMacId = async (macId) => {
+    if (!window.confirm(`Delete all data for MACID: ${macId}?`)) return;
+    try {
+      await axios.delete(`${BACKEND_URL}/api/data/deleteByMacId`, { data: { macId } });
+      alert(`Deleted all data for MACID: ${macId}`);
+      fetchData();
+    } catch (err) {
+      alert('Failed to delete data');
+      console.error(err);
+    }
+  };
+
   return (
     <div className="min-h-screen px-6 py-10 text-foreground bg-background font-sans">
       <DashboardHeader totalCount={totalCount} onExport={handleExport} />
@@ -99,6 +115,28 @@ export default function App() {
         <Loader />
       ) : (
         <>
+          {/* MACID List and Delete Buttons */}
+          <div className="mb-6">
+            <h2 className="text-lg font-bold mb-2">All MACIDs</h2>
+            <div className="flex flex-wrap gap-2">
+              {uniqueMacIds.length === 0 ? (
+                <span className="text-gray-400">No MACIDs found.</span>
+              ) : (
+                uniqueMacIds.map(macId => (
+                  <div key={macId} className="flex items-center bg-gray-100 rounded px-3 py-1">
+                    <span className="mr-2 font-mono">{macId}</span>
+                    <button
+                      className="text-xs bg-red-500 text-white rounded px-2 py-1 hover:bg-red-600"
+                      onClick={() => handleDeleteByMacId(macId)}
+                    >
+                      Delete by MACID
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
             <DateFilter fromDate={fromDate} toDate={toDate} setFromDate={setFromDate} setToDate={setToDate} deleteByDate={deleteByDate} />
             <div className="flex items-center gap-4">
