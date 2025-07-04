@@ -1,6 +1,9 @@
 import Pet from '../models/Pet.js';
 
 export const createPet = async (req, res) => {
+  console.log('--- createPet called ---');
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
   try {
     const { imageUrl, name, breed, dob, user, macId, device } = req.body;
     let parsedDevice = device;
@@ -8,13 +11,16 @@ export const createPet = async (req, res) => {
       try {
         parsedDevice = JSON.parse(device);
       } catch (e) {
+        console.error('Device JSON parse error:', e);
         parsedDevice = undefined;
       }
     }
     const pet = new Pet({ imageUrl, name, breed, dob, user, macId, device: parsedDevice });
     await pet.save();
+    console.log('Pet saved:', pet);
     res.status(201).json(pet);
   } catch (err) {
+    console.error('Error in createPet:', err);
     res.status(400).json({ error: err.message });
   }
 };
