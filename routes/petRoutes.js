@@ -5,7 +5,14 @@ import { getEspDataByMacId, getMostRecentEspDataByMacId } from '../controllers/p
 
 const router = express.Router();
 
-router.post('/', upload.single('image'), createPet);
+// Image upload endpoint for frontend
+router.post('/upload-image', upload.single('image'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No image uploaded' });
+  res.json({ imageUrl: req.file.path });
+});
+
+// Main pet creation (JSON only)
+router.post('/', createPet);
 router.get('/', getPets);
 router.get('/:id', getPetById);
 router.put('/:id', updatePet);
