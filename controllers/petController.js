@@ -2,9 +2,10 @@ import Pet from '../models/Pet.js';
 
 export const createPet = async (req, res) => {
   try {
-    const { imageUrl, name, breed, dob, user, macId } = req.body;
-    console.log(req.body);
-    const pet = new Pet({ imageUrl, name, breed,dob, user, macId });
+    const { name, breed, dob, user, macId, device } = req.body;
+    // Use uploaded image if present, otherwise use imageUrl from body
+    const imageUrl = req.file ? req.file.path : req.body.imageUrl || '';
+    const pet = new Pet({ imageUrl, name, breed, dob, user, macId, device });
     await pet.save();
     res.status(201).json(pet);
   } catch (err) {

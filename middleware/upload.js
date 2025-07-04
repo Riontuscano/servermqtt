@@ -5,11 +5,11 @@ import cloudinary from '../config/cloudinary.js';
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'dog-app-pets',
-    allowed_formats: ['jpg', 'png', 'jpeg'],
+    folder: 'pets',
+    allowed_formats: ['jpg', 'jpeg', 'png'],
   },
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
 export default upload; 
