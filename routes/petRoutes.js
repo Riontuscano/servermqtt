@@ -1,6 +1,7 @@
 import express from 'express';
 import { createPet, getPets, getPetById, updatePet, deletePet, getPetsByUser } from '../controllers/petController.js';
 import { getEspDataByMacId, getMostRecentEspDataByMacId } from '../controllers/petEspDataController.js';
+import upload from '../middleware/upload.js';
 
 const router = express.Router();
 
@@ -12,5 +13,10 @@ router.delete('/:id', deletePet);
 router.get('/user/:userId', getPetsByUser);
 router.get('/espdata/:macId', getEspDataByMacId);
 router.get('/espdata/:macId/recent', getMostRecentEspDataByMacId);
+
+router.post('/upload-image', upload.single('image'), (req, res) => {
+    res.json({ imageUrl: req.file.path });
+  });
+  
 
 export default router; 
