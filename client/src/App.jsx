@@ -124,7 +124,7 @@ export default function App() {
               ) : (
                 uniqueMacIds.map(macId => (
                   <div key={macId} className="flex items-center bg-gray-100 rounded px-3 py-1">
-                    <span className="mr-2 font-mono">{macId}</span>
+                    <span className="mr-2 font-mono text-black">{macId}</span>
                     <button
                       className="text-xs bg-red-500 text-white rounded px-2 py-1 hover:bg-red-600"
                       onClick={() => handleDeleteByMacId(macId)}
