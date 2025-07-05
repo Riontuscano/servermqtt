@@ -9,34 +9,27 @@ function macMinus2(mac) {
 
 export const getEspDataByMacId = async (req, res) => {
   const { macId } = req.params;
-  console.log('--- getEspDataByMacId called ---');
-  console.log('Searching for MACID:', macId);
   
   try {
     // Check how many documents exist for this MACID
     const count = await EspData.countDocuments({ MACID: macId });
-    console.log(`Found ${count} documents for MACID: ${macId}`);
     
     let data = await EspData.find({ MACID: macId });
     if (!data || data.length === 0) {
       // Try with macId - 2
       const altMacId = macMinus2(macId);
-      console.log('Trying alternative MACID:', altMacId);
       const altCount = await EspData.countDocuments({ MACID: altMacId });
-      console.log(`Found ${altCount} documents for alternative MACID: ${altMacId}`);
       data = await EspData.find({ MACID: altMacId });
     }
     
     // Log all unique MACIDs in database for debugging
     const allMacIds = await EspData.distinct('MACID');
-    console.log('All MACIDs in database:', allMacIds);
     
     const normalized = data.map(doc => ({
       ...doc.toObject(),
       WiFi: Number(doc.WiFi),
       Signal: Number(doc.Signal)
     }));
-    console.log(`Returning ${normalized.length} documents`);
     res.json(normalized);
   } catch (err) {
     console.error('Error in getEspDataByMacId:', err);

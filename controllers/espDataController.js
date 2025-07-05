@@ -37,7 +37,6 @@ export const saveMqttData = async (data) => {
   try {
     // Skip saving if coordinates are 0,0 (invalid GPS data)
     if (Number(data.Latitude) === 0 && Number(data.Longitude) === 0) {
-      console.log('Skipping data with invalid coordinates (0,0):', data.MACID);
       return;
     }
 

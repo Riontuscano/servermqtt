@@ -29,7 +29,6 @@ export async function login(req, res) {
     if (!user) return res.status(400).json({ message: 'Invalid credentials' });
     const isMatch = await compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
-    console.log(isMatch);
 
     const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: '1d' });
     res.json({ user: { id: user._id, fullName: user.fullName, username: user.username, email: user.email, phone: user.phone, img: user.img }, token });

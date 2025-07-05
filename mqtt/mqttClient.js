@@ -12,16 +12,16 @@ const mqttClient = mqttConnect(mqttUrl, {
 });
 
 mqttClient.on('connect', () => {
-  console.log('Connected to MQTT Broker');
   mqttClient.subscribe(mqttTopic, (err) => {
-    if (!err) console.log(`Subscribed to topic: ${mqttTopic}`);
+    if (!err) {
+      // Subscribed successfully
+    }
   });
 });
 
 mqttClient.on('message', async (topic, message) => {
   try {
     const data = JSON.parse(message.toString());
-    // console.log('📥 Received:', data);
     await saveMqttData(data);
   } catch (err) {
     console.error('Error handling MQTT message:', err);
