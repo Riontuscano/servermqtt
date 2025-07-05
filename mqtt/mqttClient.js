@@ -15,6 +15,7 @@ mqttClient.on('connect', () => {
   mqttClient.subscribe(mqttTopic, (err) => {
     if (!err) {
       // Subscribed successfully
+      console.log('Subscribed to MQTT topic:', mqttTopic);
     }
   });
 });
