@@ -18,4 +18,20 @@ router.delete('/data/deleteByMacId', async (req, res) => {
   }
 });
 
+// Delete all records with 0,0 coordinates
+router.delete('/data/deleteInvalidCoordinates', async (req, res) => {
+  try {
+    const result = await EspData.deleteMany({
+      $or: [
+        { Latitude: 0, Longitude: 0 },
+        { Latitude: null, Longitude: null },
+        { Latitude: { $exists: false }, Longitude: { $exists: false } }
+      ]
+    });
+    res.json({ message: `${result.deletedCount} documents with invalid coordinates deleted.` });
+  } catch (err) {
+    res.status(500).json({ error: 'Delete failed', details: err });
+  }
+});
+
 export default router; 

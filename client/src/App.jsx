@@ -22,13 +22,37 @@ export default function App() {
   const [sortOrder, setSortOrder] = useState('desc');
   const [exporting, setExporting] = useState(false);
   const [gprsOnly, setGprsOnly] = useState(false);
+  const [selectedMacId, setSelectedMacId] = useState('');
+  const [allMacIds, setAllMacIds] = useState([]);
+  const [lastFetchTime, setLastFetchTime] = useState(null);
 
   const perPage = 20;
   const totalPages = Math.ceil(totalCount / perPage);
 
   useEffect(() => {
-    fetchData();
-  }, [currentPage, sortOrder]);
+    fetchAllMacIds();
+  }, []);
+
+  useEffect(() => {
+    if (selectedMacId) {
+      fetchDataByMacId();
+      // Set up polling every 5 seconds for the selected MACID
+      const interval = setInterval(() => fetchNewDataByMacId(), 5000);
+      return () => clearInterval(interval);
+    } else {
+      fetchData();
+    }
+  }, [currentPage, sortOrder, selectedMacId]);
+
+  const fetchAllMacIds = async () => {
+    try {
+      const res = await axios.get(`${BACKEND_URL}/api/data?page=1&limit=10000&sort=desc`);
+      const uniqueMacIds = Array.from(new Set(res.data.docs.map(doc => doc.MACID))).filter(Boolean);
+      setAllMacIds(uniqueMacIds);
+    } catch (err) {
+      console.error('Failed to fetch MACIDs:', err);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -40,6 +64,49 @@ export default function App() {
       console.error('Failed to fetch data:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDataByMacId = async () => {
+    if (!selectedMacId) return;
+    setLoading(true);
+    try {
+      const res = await axios.get(`${BACKEND_URL}/api/pets/espdata/${selectedMacId}`);
+      setData(res.data);
+      setTotalCount(res.data.length);
+      // Set the timestamp of the latest record
+      if (res.data.length > 0) {
+        const latestTime = new Date(Math.max(...res.data.map(d => new Date(d.createdAt))));
+        setLastFetchTime(latestTime);
+      }
+    } catch (err) {
+      console.error('Failed to fetch data for MACID:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchNewDataByMacId = async () => {
+    if (!selectedMacId || !lastFetchTime) return;
+    
+    try {
+      // Fetch only data newer than the last fetch time
+      const res = await axios.get(`${BACKEND_URL}/api/pets/espdata/${selectedMacId}/recent`);
+      if (res.data && res.data.createdAt) {
+        const newDataTime = new Date(res.data.createdAt);
+        if (newDataTime > lastFetchTime) {
+          // Append the new data to existing data
+          setData(prevData => {
+            const updatedData = [...prevData, res.data];
+            // Sort by createdAt to maintain order
+            return updatedData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+          });
+          setTotalCount(prev => prev + 1);
+          setLastFetchTime(newDataTime);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch new data for MACID:', err);
     }
   };
 
@@ -58,6 +125,11 @@ export default function App() {
 
   const handleSortChange = (e) => {
     setSortOrder(e.target.value);
+  };
+
+  const handleMacIdChange = (e) => {
+    setSelectedMacId(e.target.value);
+    setCurrentPage(1); // Reset to first page when changing MACID
   };
 
   const handleExport = async () => {
@@ -92,7 +164,13 @@ export default function App() {
   // Filter data for GPRS only
   const filteredData = gprsOnly ? data.filter(d => Number(d.Signal) > 0) : data;
 
-  // Get unique MACIDs
+  // Filter out invalid coordinates (0, 0 or null) for map display
+  const mapData = filteredData.filter(d => 
+    d.Latitude && d.Longitude && 
+    Number(d.Latitude) !== 0 && Number(d.Longitude) !== 0
+  );
+
+  // Get unique MACIDs from current data
   const uniqueMacIds = Array.from(new Set(data.map(doc => doc.MACID))).filter(Boolean);
 
   // Delete by MACID handler
@@ -101,7 +179,15 @@ export default function App() {
     try {
       await axios.delete(`${BACKEND_URL}/api/data/deleteByMacId`, { data: { macId } });
       alert(`Deleted all data for MACID: ${macId}`);
-      fetchData();
+      if (selectedMacId === macId) {
+        setSelectedMacId('');
+      }
+      fetchAllMacIds();
+      if (selectedMacId) {
+        fetchDataByMacId();
+      } else {
+        fetchData();
+      }
     } catch (err) {
       alert('Failed to delete data');
       console.error(err);
@@ -115,6 +201,26 @@ export default function App() {
         <Loader />
       ) : (
         <>
+          {/* MACID Selector */}
+          <div className="mb-6">
+            <h2 className="text-lg font-bold mb-2">Select Device</h2>
+            <select 
+              value={selectedMacId} 
+              onChange={handleMacIdChange}
+              className="bg-card border border-gray-700 text-white px-3 py-2 rounded w-full md:w-auto"
+            >
+              <option value="">All Devices</option>
+              {allMacIds.map(macId => (
+                <option key={macId} value={macId}>{macId}</option>
+              ))}
+            </select>
+            {selectedMacId && (
+              <p className="text-sm text-gray-400 mt-1">
+                Auto-refreshing every 5 seconds for {selectedMacId}
+              </p>
+            )}
+          </div>
+
           {/* MACID List and Delete Buttons */}
           <div className="mb-6">
             <h2 className="text-lg font-bold mb-2">All MACIDs</h2>
@@ -164,7 +270,7 @@ export default function App() {
           {/* Map Section */}
           <div className="mb-8">
             <h2 className="text-2xl font-bold mb-4 text-primary">📍 Location Map</h2>
-            <Map data={filteredData} />
+            <Map data={mapData} />
           </div>
           
           <DataTable data={filteredData} currentPage={currentPage} perPage={perPage} />

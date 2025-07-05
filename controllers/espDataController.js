@@ -35,15 +35,24 @@ export const deleteByDate = async (req, res) => {
 
 export const saveMqttData = async (data) => {
   try {
+    // Skip saving if coordinates are 0,0 (invalid GPS data)
+    if (Number(data.Latitude) === 0 && Number(data.Longitude) === 0) {
+      console.log('Skipping data with invalid coordinates (0,0):', data.MACID);
+      return;
+    }
+
+    const wifiValue = Number(data.WiFi);
+    const signalValue = Number(data.Signal);
+
     const doc = new EspData({
       SIM: data.SIM,
       MACID: data.MACID,
       Latitude: data.Latitude,
       Longitude: data.Longitude,
       Battery: data.Battery,
-      StepCount: data.StepCount,
-      WiFi: data.WiFi,
-      Signal:data.Signal,
+      StepCount: data["Step count"],
+      WiFi: isNaN(wifiValue) ? null : wifiValue,
+      Signal: isNaN(signalValue) ? null : signalValue,
       SOS: data.SOS,
       Reset: data.Reset,
       BLE: data.BLE,
