@@ -10,7 +10,7 @@ import Loader from './components/Loader';
 import Map from './components/Map';
 import * as XLSX from 'xlsx';
 
-const BACKEND_URL = 'http://localhost:5500';
+const BACKEND_URL = 'https://servermqtt.onrender.com';
 
 export default function App() {
   const [data, setData] = useState([]);
