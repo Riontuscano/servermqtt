@@ -88,7 +88,7 @@ export default function Map({ data }) {
   });
 
   return (
-    <div className="w-full h-[500px] rounded-lg overflow-hidden shadow-lg bg-card">
+    <div className="w-full h-96 rounded-lg overflow-hidden shadow-lg bg-card">
       <MapContainer 
         center={center} 
         zoom={data.length > 0 ? 10 : 2} 

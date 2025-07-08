@@ -12,12 +12,8 @@ const espDataSchema = new mongoose.Schema({
   SOS: Number,
   Reset: Number,
   BLE: Number,
-  BreedFactor: Number,
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
-});
+  BreedFactor: Number
+}, { timestamps: true });
 
 const EspData = mongoose.model('EspData', espDataSchema);
 

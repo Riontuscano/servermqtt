@@ -10,7 +10,7 @@ import Loader from './components/Loader';
 import Map from './components/Map';
 import * as XLSX from 'xlsx';
 
-const BACKEND_URL = 'https://servermqtt.onrender.com';
+const BACKEND_URL = 'http://localhost:5500';
 
 export default function App() {
   const [data, setData] = useState([]);
@@ -22,37 +22,34 @@ export default function App() {
   const [sortOrder, setSortOrder] = useState('desc');
   const [exporting, setExporting] = useState(false);
   const [gprsOnly, setGprsOnly] = useState(false);
-  const [selectedMacId, setSelectedMacId] = useState('');
   const [allMacIds, setAllMacIds] = useState([]);
-  const [lastFetchTime, setLastFetchTime] = useState(null);
+  const [selectedMacId, setSelectedMacId] = useState('');
 
   const perPage = 20;
   const totalPages = Math.ceil(totalCount / perPage);
 
+  // Fetch all MACIDs on mount
   useEffect(() => {
-    fetchAllMacIds();
+    axios.get(`${BACKEND_URL}/api/data/macids`)
+      .then(res => setAllMacIds(res.data))
+      .catch(err => console.error('Failed to fetch MACIDs:', err));
   }, []);
 
   useEffect(() => {
     if (selectedMacId) {
-      fetchDataByMacId();
-      // Set up polling every 5 seconds for the selected MACID
-      const interval = setInterval(() => fetchNewDataByMacId(), 5000);
-      return () => clearInterval(interval);
+      setLoading(true);
+      axios.get(`${BACKEND_URL}/api/pets/espdata/${selectedMacId}`)
+        .then(res => {
+          setData(res.data);
+          setTotalCount(res.data.length);
+        })
+        .catch(err => console.error('Failed to fetch data:', err))
+        .finally(() => setLoading(false));
     } else {
       fetchData();
     }
-  }, [currentPage, sortOrder, selectedMacId]);
-
-  const fetchAllMacIds = async () => {
-    try {
-      const res = await axios.get(`${BACKEND_URL}/api/data?page=1&limit=10000&sort=desc`);
-      const uniqueMacIds = Array.from(new Set(res.data.docs.map(doc => doc.MACID))).filter(Boolean);
-      setAllMacIds(uniqueMacIds);
-    } catch (err) {
-      console.error('Failed to fetch MACIDs:', err);
-    }
-  };
+    // eslint-disable-next-line
+  }, [selectedMacId, currentPage, sortOrder]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -64,49 +61,6 @@ export default function App() {
       console.error('Failed to fetch data:', err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchDataByMacId = async () => {
-    if (!selectedMacId) return;
-    setLoading(true);
-    try {
-      const res = await axios.get(`${BACKEND_URL}/api/pets/espdata/${selectedMacId}`);
-      setData(res.data);
-      setTotalCount(res.data.length);
-      // Set the timestamp of the latest record
-      if (res.data.length > 0) {
-        const latestTime = new Date(Math.max(...res.data.map(d => new Date(d.createdAt))));
-        setLastFetchTime(latestTime);
-      }
-    } catch (err) {
-      console.error('Failed to fetch data for MACID:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchNewDataByMacId = async () => {
-    if (!selectedMacId || !lastFetchTime) return;
-    
-    try {
-      // Fetch only data newer than the last fetch time
-      const res = await axios.get(`${BACKEND_URL}/api/pets/espdata/${selectedMacId}/recent`);
-      if (res.data && res.data.createdAt) {
-        const newDataTime = new Date(res.data.createdAt);
-        if (newDataTime > lastFetchTime) {
-          // Append the new data to existing data
-          setData(prevData => {
-            const updatedData = [...prevData, res.data];
-            // Sort by createdAt to maintain order
-            return updatedData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-          });
-          setTotalCount(prev => prev + 1);
-          setLastFetchTime(newDataTime);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to fetch new data for MACID:', err);
     }
   };
 
@@ -125,11 +79,6 @@ export default function App() {
 
   const handleSortChange = (e) => {
     setSortOrder(e.target.value);
-  };
-
-  const handleMacIdChange = (e) => {
-    setSelectedMacId(e.target.value);
-    setCurrentPage(1); // Reset to first page when changing MACID
   };
 
   const handleExport = async () => {
@@ -170,7 +119,7 @@ export default function App() {
     Number(d.Latitude) !== 0 && Number(d.Longitude) !== 0
   );
 
-  // Get unique MACIDs from current data
+  // Get unique MACIDs (from current data)
   const uniqueMacIds = Array.from(new Set(data.map(doc => doc.MACID))).filter(Boolean);
 
   // Delete by MACID handler
@@ -179,15 +128,7 @@ export default function App() {
     try {
       await axios.delete(`${BACKEND_URL}/api/data/deleteByMacId`, { data: { macId } });
       alert(`Deleted all data for MACID: ${macId}`);
-      if (selectedMacId === macId) {
-        setSelectedMacId('');
-      }
-      fetchAllMacIds();
-      if (selectedMacId) {
-        fetchDataByMacId();
-      } else {
-        fetchData();
-      }
+      fetchData();
     } catch (err) {
       alert('Failed to delete data');
       console.error(err);
@@ -197,30 +138,25 @@ export default function App() {
   return (
     <div className="min-h-screen px-6 py-10 text-foreground bg-background font-sans">
       <DashboardHeader totalCount={totalCount} onExport={handleExport} />
+      {/* MACID Dropdown */}
+      <div className="mb-4">
+        <label htmlFor="macid-select" className="mr-2 font-bold">Select MACID:</label>
+        <select
+          id="macid-select"
+          value={selectedMacId}
+          onChange={e => setSelectedMacId(e.target.value)}
+          className="px-3 py-2 border rounded text-black"
+        >
+          <option value="">-- All Devices --</option>
+          {allMacIds.map(macId => (
+            <option key={macId} value={macId}>{macId}</option>
+          ))}
+        </select>
+      </div>
       {(loading || exporting) ? (
         <Loader />
       ) : (
         <>
-          {/* MACID Selector */}
-          <div className="mb-6">
-            <h2 className="text-lg font-bold mb-2">Select Device</h2>
-            <select 
-              value={selectedMacId} 
-              onChange={handleMacIdChange}
-              className="bg-card border border-gray-700 text-white px-3 py-2 rounded w-full md:w-auto"
-            >
-              <option value="">All Devices</option>
-              {allMacIds.map(macId => (
-                <option key={macId} value={macId}>{macId}</option>
-              ))}
-            </select>
-            {selectedMacId && (
-              <p className="text-sm text-gray-400 mt-1">
-                Auto-refreshing every 5 seconds for {selectedMacId}
-              </p>
-            )}
-          </div>
-
           {/* MACID List and Delete Buttons */}
           <div className="mb-6">
             <h2 className="text-lg font-bold mb-2">All MACIDs</h2>

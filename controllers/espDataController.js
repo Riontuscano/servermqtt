@@ -35,8 +35,11 @@ export const deleteByDate = async (req, res) => {
 
 export const saveMqttData = async (data) => {
   try {
+    // Log all incoming data from devices
+    console.log('Received MQTT data:', data);
     // Skip saving if coordinates are 0,0 (invalid GPS data)
     if (Number(data.Latitude) === 0 && Number(data.Longitude) === 0) {
+      console.log('Skipping data with invalid coordinates (0,0):', data.MACID);
       return;
     }
 

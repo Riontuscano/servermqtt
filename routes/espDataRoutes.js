@@ -7,6 +7,16 @@ const router = express.Router();
 router.get('/data', getData);
 router.delete('/data/deleteByDate', deleteByDate);
 
+// Get all unique MACIDs
+router.get('/data/macids', async (req, res) => {
+  try {
+    const macIds = await EspData.distinct('MACID');
+    res.json(macIds.filter(Boolean));
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch MACIDs', details: err });
+  }
+});
+
 // Delete all ESP data by MACID
 router.delete('/data/deleteByMacId', async (req, res) => {
   const { macId } = req.body;
