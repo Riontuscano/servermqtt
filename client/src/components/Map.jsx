@@ -71,14 +71,17 @@ function MarkerWithZoom({ point, index }) {
 }
 
 export default function Map({ data }) {
-  // Calculate center point from data
-  const center = data.length > 0 
-    ? [data[0].Latitude || 0, data[0].Longitude || 0]
+  // Filter out points with [0, 0] coordinates for plotting
+  const validPoints = data.filter(point => !(Number(point.Latitude) === 0 && Number(point.Longitude) === 0));
+
+  // Calculate center point from valid data
+  const center = validPoints.length > 0 
+    ? [validPoints[0].Latitude || 0, validPoints[0].Longitude || 0]
     : [0, 0];
 
-  // Group data by MACID and create polylines for each device
+  // Group valid data by MACID and create polylines for each device
   const polylinesByMacId = {};
-  data.forEach(point => {
+  validPoints.forEach(point => {
     if (point.Latitude && point.Longitude && point.MACID) {
       if (!polylinesByMacId[point.MACID]) {
         polylinesByMacId[point.MACID] = [];
@@ -91,7 +94,7 @@ export default function Map({ data }) {
     <div className="w-full h-96 rounded-lg overflow-hidden shadow-lg bg-card">
       <MapContainer 
         center={center} 
-        zoom={data.length > 0 ? 10 : 2} 
+        zoom={validPoints.length > 0 ? 10 : 2} 
         style={{ height: '100%', width: '100%' }}
         className="z-0"
       >
@@ -111,7 +114,7 @@ export default function Map({ data }) {
             />
           )
         ))}
-        {data.map((point, index) => (
+        {validPoints.map((point, index) => (
           <MarkerWithZoom key={`${point._id}-${index}`} point={point} index={index} />
         ))}
       </MapContainer>
